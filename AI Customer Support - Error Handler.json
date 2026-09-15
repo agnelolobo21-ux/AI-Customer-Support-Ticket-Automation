@@ -1,0 +1,68 @@
+{
+  "name": "AI Customer Support - Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d7256aca-7543-4b00-b7af-680ca6733174",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "agnelolobo.24@gmail.com",
+        "subject": "n8n Customer Support Workflow - Error Alert",
+        "emailType": "text",
+        "message": "=CUSTOMER SUPPORT WORKFLOW ERROR  An error occurred in the n8n customer support workflow.  Workflow: {{ $json.workflow?.name || \"Unknown\" }}  Error Message: {{ $json.execution?.error?.message || \"Unknown error\" }}  Execution ID: {{ $json.execution?.id || \"Unknown\" }}  Please check the n8n execution history for details.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "641d29d6-3801-45aa-9f34-14c49830c17d",
+      "name": "Send a message",
+      "webhookId": "4ff1b712-2493-4a2a-b384-9ad17780dbe8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCZaGzOw3htVdaSU",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "876b109d-c883-4817-9694-59d4429bf187",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d920b0323c3b09ecb2af5fe3b16e777bada6519f155422c70ee6746147ef0d16"
+  },
+  "nodeGroups": [],
+  "id": "hioW5rWB8o7KgLfv",
+  "tags": []
+}

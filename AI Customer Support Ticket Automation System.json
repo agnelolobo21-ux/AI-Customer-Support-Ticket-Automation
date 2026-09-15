@@ -1,0 +1,884 @@
+{
+  "name": "AI Customer Support Ticket Automation System",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Complaint/Message form",
+        "formDescription": "Enter your complaint/message.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Customer Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Customer Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Complaint/Message",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Order ID.",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -688,
+        128
+      ],
+      "id": "92f5b619-eb0a-4393-b014-6c5a9e6b5e55",
+      "name": "On form submission",
+      "webhookId": "cac7d9dd-27d0-492e-96b1-c9f85b2574af"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8fbea524-fa4e-4d4b-8305-d22f9cd09fee",
+              "name": "Customer Name",
+              "value": "={{ $json['Customer Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "818784e7-6f70-43fc-9d16-7483fc666be4",
+              "name": "Customer Email",
+              "value": "={{ $json['Customer Email'] }}",
+              "type": "string"
+            },
+            {
+              "id": "abcd23d9-c206-4e67-979f-684997f43378",
+              "name": "Complaint/Message",
+              "value": "={{ $json['Complaint/Message'] }}",
+              "type": "string"
+            },
+            {
+              "id": "fd13e72d-0069-4118-9b6f-137ffbba4ed8",
+              "name": "Order ID.",
+              "value": "={{ $json['Order ID.'] }}",
+              "type": "string"
+            },
+            {
+              "id": "61684332-b24e-4de2-a4bd-5424fe10c140",
+              "name": "customer_name_clean",
+              "value": "={{ $json[\"Customer Name\"].trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "2eca4dd4-d4df-4704-b722-896e44ec6a42",
+              "name": "email_clean",
+              "value": "={{ $json[\"Customer Email\"].trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "e50ac417-227e-402c-ab3c-95673d84ddbf",
+              "name": "message_clean",
+              "value": "={{ $json[\"Complaint/Message\"].trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "dd621b64-cc3f-4207-a705-7ab9441ae872",
+              "name": "order_id_clean",
+              "value": "={{ $json[\"Order ID.\"].trim().toUpperCase() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -512,
+        128
+      ],
+      "id": "bfc146da-79d3-4aff-913d-5da40892d16b",
+      "name": "Clean & Normalize Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "49a84da4-3790-4bdb-90f7-0d09d5f52f61",
+              "leftValue": "={{ $json.message_clean }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c7944817-2340-493f-9e23-cb50ef3c49a5",
+              "leftValue": "={{ $json.email_clean }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b0a7a094-0962-45cc-88dd-e780dc0bc23a",
+              "leftValue": "={{ $json.order_id_clean }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9da58c24-7524-4599-b4f4-b4fb58be9ec3",
+              "leftValue": "={{ $json.customer_name_clean }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -368,
+        128
+      ],
+      "id": "857c53c3-ea18-46ad-9160-385fdfd86b52",
+      "name": "Validate Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI customer support ticket classification system.\n\nAnalyse the customer complaint and classify it using ONLY the allowed values below.\n\nCATEGORY:\n\n- payment — payment, billing, refund, transaction, or charge-related issues\n- delivery — shipping, tracking, delayed, missing, or delivery-related issues\n- product — defective, damaged, incorrect, poor-quality, or product-related issues\n- technical — website, app, login, system, technical error, or technical issue\n- other — anything that does not fit the categories above\n\nPRIORITY:\n\n- low — minor issue, general question, feedback, or non-urgent request\n- medium — requires support attention but is not urgent\n- high — serious complaint, financial loss, repeated failure, urgent issue, major disruption, or strongly frustrated customer\n\nSENTIMENT:\n\n- positive — customer expresses satisfaction, appreciation, or positive feedback\n- neutral — customer is mainly asking a question or providing factual information without clear positive or negative emotion\n- negative — customer expresses frustration, anger, disappointment, dissatisfaction, or a complaint\n\nSUMMARY:\n\nWrite a short, clear, one-sentence summary of the customer's issue.\n\nSUGGESTED RESPONSE:\n\nWrite a short, professional and empathetic response that can be sent directly to the customer.\n\nDo not invent refunds, compensation, policies, guarantees, or timelines. Do not claim that an action has been completed unless the customer message explicitly confirms it.\n\nCustomer Name:\n{{ $json.name_clean }}\n\nEmail:\n{{ $json.email_clean }}\n\nOrder ID:\n{{ $json.order_id_clean }}\n\nCustomer Complaint:\n{{ $json.message_clean }}\n\nUse only the following values:\n\nCATEGORY:\npayment, delivery, product, technical, other\n\nPRIORITY:\nlow, medium, high\n\nSENTIMENT:\npositive, neutral, negative\n\nDo not use any other category, priority, or sentiment value.",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -96,
+        112
+      ],
+      "id": "209eee7a-b00c-4e55-a0ae-2a39038aa229",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        304
+      ],
+      "id": "9f124c0f-5983-418f-89f8-83b1dde440af",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lc9KhaBEWfxTZioi",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\",\n      \"enum\": [\"payment\", \"delivery\", \"product\", \"technical\", \"other\"]\n    },\n    \"priority\": {\n      \"type\": \"string\",\n      \"enum\": [\"low\", \"medium\", \"high\"]\n    },\n    \"sentiment\": {\n      \"type\": \"string\",\n      \"enum\": [\"positive\", \"neutral\", \"negative\"]\n    },\n    \"summary\": {\n      \"type\": \"string\"\n    },\n    \"suggested_response\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"category\",\n    \"priority\",\n    \"sentiment\",\n    \"summary\",\n    \"suggested_response\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        48,
+        304
+      ],
+      "id": "4cc3ef5d-ea4e-45d4-9b5d-950cf9224b4c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1N1FxVq1QoZhOv8FFIFHZ30HraTShSgw0cgt9xlRAN6Q",
+          "mode": "list",
+          "cachedResultName": "AI Customer Support Ticket System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1N1FxVq1QoZhOv8FFIFHZ30HraTShSgw0cgt9xlRAN6Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1N1FxVq1QoZhOv8FFIFHZ30HraTShSgw0cgt9xlRAN6Q/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Ticket ID": "={{ \"TKT-\" + $now.toMillis() }}",
+            "Date": "={{ $now.toISO() }}",
+            "Status": "=Processed",
+            "AI Response": "={{ $json.output.suggested_response }}",
+            "Summary": "={{ $json.output.summary }}",
+            "Sentiment": "={{ $json.output.sentiment }}",
+            "Priority": "={{ $json.output.priority }}",
+            "Category": "={{ $json.output.category }}",
+            "Message": "={{ $('Clean & Normalize Input').item.json.message_clean }}",
+            "Order ID": "={{ $('Clean & Normalize Input').item.json.order_id_clean }}",
+            "Email": "={{ $('Clean & Normalize Input').item.json.email_clean }}",
+            "Customer Name": "={{ $('Clean & Normalize Input').item.json.customer_name_clean }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ticket ID",
+              "displayName": "Ticket ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Order ID",
+              "displayName": "Order ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Response",
+              "displayName": "AI Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        112
+      ],
+      "id": "cb262c19-4dc6-41d9-88e4-26e0e6fbf905",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4IdK26aCaBSm1Kw6",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Category }}",
+                    "rightValue": "payment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "07bd778a-ede1-428e-8b8b-2c2a72f2d39d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Payment"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7a498306-48ad-49e8-9f0d-cc0390ab3dbc",
+                    "leftValue": "={{ $json.Category }}",
+                    "rightValue": "delivery",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Delivery"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4fc98496-8e39-48a1-b4de-7b3d7d8476fc",
+                    "leftValue": "={{ $json.Category }}",
+                    "rightValue": "product",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Product"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "eb4a036c-06d8-4533-acff-260016f2c549",
+                    "leftValue": "={{ $json.Category }}",
+                    "rightValue": "technical",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Technical"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "17db44de-1351-49d0-9d7b-c5798f8180fa",
+                    "leftValue": "={{ $json.Category }}",
+                    "rightValue": "other",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Other"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -272,
+        624
+      ],
+      "id": "dd0846f6-fa29-490c-b540-1a6722f63dc6",
+      "name": "Route by Category"
+    },
+    {
+      "parameters": {
+        "sendTo": "agnelolobo.24@gmail.com",
+        "subject": "={{ \"Payment Complaint - \" + $('Clean & Normalize Input').item.json.order_id_clean + \" - \" + $('Basic LLM Chain').item.json.output.priority }}",
+        "emailType": "text",
+        "message": "=Customer Support Ticket\n\nCustomer Name: {{ $json['Customer Name'] }}\nEmail: {{ $json.Email }}\nOrder ID: {{ $json['Order ID'] }}\n\nCategory: {{ $json.Category }}\nPriority: {{ $json.Priority }}\nSentiment: {{ $json.Sentiment }}\n\nCustomer Complaint:\n{{ $('Validate Input').item.json.message_clean }}\n\nAI Summary:\n{{ $('Basic LLM Chain').item.json.output.summary }}\n\nSuggested Customer Response:\n{{ $('Basic LLM Chain').item.json.output.suggested_response }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        560
+      ],
+      "id": "a0a51896-35e9-4005-a2fa-1e2efc0db9a6",
+      "name": "Send a message",
+      "webhookId": "7c1b29d3-911f-476a-ae90-4282e3c301c0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCZaGzOw3htVdaSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1e1d3819-62f4-4bb6-b6c5-827efc0abb43",
+              "leftValue": "={{ $('Basic LLM Chain').item.json.output.priority }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        288
+      ],
+      "id": "4d6c0284-4685-40f9-9ed2-0ea452a9e2f1",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "sendTo": "agnelolobo.24@gmail.com",
+        "subject": "={{ \"HIGH PRIORITY ALERT - \" + $('Clean & Normalize Input').item.json.order_id_clean }}",
+        "emailType": "text",
+        "message": "=HIGH PRIORITY CUSTOMER SUPPORT ALERT\n\nCustomer Name: {{ $('Clean & Normalize Input').item.json.customer_name_clean }}\nCustomer Email: {{ $('Clean & Normalize Input').item.json.email_clean }}\nOrder ID: {{ $('Clean & Normalize Input').item.json.order_id_clean }}\n\nCategory: {{ $('Basic LLM Chain').item.json.output.category }}\nPriority: {{ $('Basic LLM Chain').item.json.output.priority }}\nSentiment: {{ $('Basic LLM Chain').item.json.output.sentiment }}\n\nCustomer Complaint:\n{{ $('Clean & Normalize Input').item.json.message_clean }}\n\nAI Summary:\n{{ $('Basic LLM Chain').item.json.output.summary }}\n\nSuggested Customer Response:\n{{ $('Basic LLM Chain').item.json.output.suggested_response }}\n\nACTION REQUIRED:\nPlease review and handle this high-priority complaint.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        112
+      ],
+      "id": "e163d577-3488-4623-8174-15cbdd5b4f4b",
+      "name": "Send a message1",
+      "webhookId": "0d449f5a-15b7-4ca5-bdc4-04aafecd5d3b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCZaGzOw3htVdaSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "agnelolobo.24@gmail.com",
+        "subject": "={{ \"Delivery Complaint - \" + $('Clean & Normalize Input').item.json.order_id_clean + \" - \" + $('Basic LLM Chain').item.json.output.priority }}",
+        "emailType": "text",
+        "message": "=DELIVERY CUSTOMER SUPPORT TICKET  Customer Name: {{ $('Clean & Normalize Input').item.json.customer_name_clean }} Customer Email: {{ $('Clean & Normalize Input').item.json.email_clean }} Order ID: {{ $('Clean & Normalize Input').item.json.order_id_clean }}  Category: {{ $('Basic LLM Chain').item.json.output.category }} Priority: {{ $('Basic LLM Chain').item.json.output.priority }} Sentiment: {{ $('Basic LLM Chain').item.json.output.sentiment }}  Customer Complaint: {{ $('Clean & Normalize Input').item.json.message_clean }}  AI Summary: {{ $('Basic LLM Chain').item.json.output.summary }}  Suggested Customer Response: {{ $('Basic LLM Chain').item.json.output.suggested_response }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        560
+      ],
+      "id": "4e51160d-9a51-4f2b-bf59-b0def7774890",
+      "name": "Send a message2",
+      "webhookId": "f1080855-b5b7-47ce-a38b-a657bc4a2e10",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCZaGzOw3htVdaSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "agnelolobo.24@gmail.com",
+        "subject": "={{ \"Product Complaint - \" + $('Clean & Normalize Input').item.json.order_id_clean + \" - \" + $('Basic LLM Chain').item.json.output.priority }}",
+        "message": "=PRODUCT CUSTOMER SUPPORT TICKET\n\nCustomer Name: {{ $('Clean & Normalize Input').item.json.customer_name_clean }}\nCustomer Email: {{ $('Clean & Normalize Input').item.json.email_clean }}\nOrder ID: {{ $('Clean & Normalize Input').item.json.order_id_clean }}\n\nCategory: {{ $('Basic LLM Chain').item.json.output.category }}\nPriority: {{ $('Basic LLM Chain').item.json.output.priority }}\nSentiment: {{ $('Basic LLM Chain').item.json.output.sentiment }}\n\nCustomer Complaint:\n{{ $('Clean & Normalize Input').item.json.message_clean }}\n\nAI Summary:\n{{ $('Basic LLM Chain').item.json.output.summary }}\n\nSuggested Customer Response:\n{{ $('Basic LLM Chain').item.json.output.suggested_response }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        672
+      ],
+      "id": "2cc8e647-4668-4893-99cc-5b84420868cd",
+      "name": "Send a message3",
+      "webhookId": "be379341-6671-4011-ad14-fe9d445dbbde",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCZaGzOw3htVdaSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "agnelolobo.24@gmail.com",
+        "subject": "={{ \"Technical Complaint - \" + $('Clean & Normalize Input').item.json.order_id_clean + \" - \" + $('Basic LLM Chain').item.json.output.priority }}",
+        "message": "=TECHNICAL CUSTOMER SUPPORT TICKET\n\nCustomer Name: {{ $('Clean & Normalize Input').item.json.customer_name_clean }}\nCustomer Email: {{ $('Clean & Normalize Input').item.json.email_clean }}\nOrder ID: {{ $('Clean & Normalize Input').item.json.order_id_clean }}\n\nCategory: {{ $('Basic LLM Chain').item.json.output.category }}\nPriority: {{ $('Basic LLM Chain').item.json.output.priority }}\nSentiment: {{ $('Basic LLM Chain').item.json.output.sentiment }}\n\nCustomer Complaint:\n{{ $('Clean & Normalize Input').item.json.message_clean }}\n\nAI Summary:\n{{ $('Basic LLM Chain').item.json.output.summary }}\n\nSuggested Customer Response:\n{{ $('Basic LLM Chain').item.json.output.suggested_response }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        768
+      ],
+      "id": "0567ab78-157d-4934-9d23-fba59aaf18e9",
+      "name": "Send a message4",
+      "webhookId": "84dff28f-7c43-4491-a55b-c5ab9e9dc017",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCZaGzOw3htVdaSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "agnelolobo.24@gmail.com",
+        "subject": "={{ \"Other Complaint - \" + $('Clean & Normalize Input').item.json.order_id_clean + \" - \" + $('Basic LLM Chain').item.json.output.priority }}",
+        "message": "=OTHER CUSTOMER SUPPORT TICKET\n\nCustomer Name: {{ $('Clean & Normalize Input').item.json.customer_name_clean }}\nCustomer Email: {{ $('Clean & Normalize Input').item.json.email_clean }}\nOrder ID: {{ $('Clean & Normalize Input').item.json.order_id_clean }}\n\nCategory: {{ $('Basic LLM Chain').item.json.output.category }}\nPriority: {{ $('Basic LLM Chain').item.json.output.priority }}\nSentiment: {{ $('Basic LLM Chain').item.json.output.sentiment }}\n\nCustomer Complaint:\n{{ $('Clean & Normalize Input').item.json.message_clean }}\n\nAI Summary:\n{{ $('Basic LLM Chain').item.json.output.summary }}\n\nSuggested Customer Response:\n{{ $('Basic LLM Chain').item.json.output.suggested_response }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        768
+      ],
+      "id": "c64d6a73-9e4a-4dda-8be7-7589794a8a59",
+      "name": "Send a message5",
+      "webhookId": "582d05be-21d8-4c84-b92a-6bbe21804d17",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCZaGzOw3htVdaSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Clean & Normalize Input').item.json.email_clean }}",
+        "subject": "={{ \"Support Response - Order \" + $('Clean & Normalize Input').item.json.order_id_clean }}",
+        "emailType": "text",
+        "message": "=Hello {{ $('Clean & Normalize Input').item.json.customer_name_clean }},  Thank you for contacting customer support.  We have received your complaint regarding order {{ $('Clean & Normalize Input').item.json.order_id_clean }}.  {{ $('Basic LLM Chain').item.json.output.suggested_response }}  If you need further assistance, please reply to this email.  Regards, Customer Support Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        112
+      ],
+      "id": "0c2d806f-ee65-4e0e-9e9d-57495f01d952",
+      "name": "Send a message6",
+      "webhookId": "fdfe72de-9ba1-4044-9ae6-e60bcddf1d71",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCZaGzOw3htVdaSU",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Clean & Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message6",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Category": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Route by Category",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route by Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1e8dd57e-de51-4d15-b034-eec77c57a838",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d920b0323c3b09ecb2af5fe3b16e777bada6519f155422c70ee6746147ef0d16"
+  },
+  "nodeGroups": [],
+  "id": "OFZEymiGaq1vcNNg",
+  "tags": []
+}
